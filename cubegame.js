@@ -73,16 +73,45 @@ app.controller("cubegame", function ($scope) {
         }
     };
 
+    var boxes = [];
+    var testtimer = 0;
+
     //BOXES
     function Box(x, y, size) {
         this.x = x;
         this.y = y;
-        this.size = 20;
+        this.size = size;
+
+        this.update = function () {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = "#b83bff";
+            ctx.fillRect(-size / 2, -size / 2, size, size);
+            ctx.restore();
+            x -= 10;
+        };
+        this.collisionCheck = function () {
+            if (player.x - (player.width / 2) <= x + (size / 2) && player.x + (player.width / 2) >= x - (size / 2)) {
+               
+                if (player.y - (player.width / 2) < y + (size / 2) && player.y + (player.width / 2) > y - (size / 2)) {
+                    console.log("HIT");
+                };
+               
+            };
+        };
     };
 
-    var boxes = [];
+   
     function BoxUpdate() {
-
+        if (testtimer > 100) {
+            boxes.push(new Box(1280, c.height - player.height, 50))
+            testtimer = 0;
+        };
+        for (var i = 0; i < boxes.length; i++) {
+            boxes[i].update();
+            boxes[i].collisionCheck();
+        }
+        testtimer +=1
     };
 
     //PLAYER
@@ -130,6 +159,8 @@ app.controller("cubegame", function ($scope) {
         ctx.clearRect(0, 0, c.width, c.height);
 
         bgUpdate();
+
+        BoxUpdate();
         fgUpdate();
      
         requestAnimationFrame(Update);
