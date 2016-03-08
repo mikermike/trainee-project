@@ -6,7 +6,9 @@ var ctx = c.getContext("2d");
 var gravity = 0.5;
 var angle = 0;
 
-var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10, jumping: true, jumpcycle:false};
+var gamevelocity = 5;
+
+var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10, jumping: true, jumpcycle:false, death:false};
 
 
 (function () {
@@ -41,7 +43,7 @@ app.controller("cubegame", function ($scope) {
 
         this.update = function () {
             ctx.save();
-            ctx.translate(x, y);
+            ctx.translate(this.x, this.y);
            // ctx.fillStyle = "#b83bff";
             if (player.jumping == false) {
                 ctx.fillStyle = "#b83bff";
@@ -49,12 +51,12 @@ app.controller("cubegame", function ($scope) {
                 ctx.fillStyle = "#ff9900";
             }
 
-            ctx.fillRect(-size / 2, -size / 2, size, size);
+            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
             ctx.restore();
 
-            x -= vel
-            if (size > 0) {
-                size -= 1;
+            this.x -= vel
+            if (this.size > 0) {
+                this.size -= 1;
             };
         };
     };
@@ -86,14 +88,14 @@ app.controller("cubegame", function ($scope) {
             ctx.save();
             ctx.translate(x, y);
             ctx.fillStyle = "#b83bff";
-            ctx.fillRect(-size / 2, -size / 2, size, size);
+            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
             ctx.restore();
-            x -= 10;
+            this.x -= gamevelocity;
         };
         this.collisionCheck = function () {
-            if (player.x - (player.width / 2) <= x + (size / 2) && player.x + (player.width / 2) >= x - (size / 2)) {
+            if (player.x - (player.width / 2) <= this.x + (this.size / 2) && player.x + (player.width / 2) >= this.x - (this.size / 2)) {
                
-                if (player.y - (player.width / 2) < y + (size / 2) && player.y + (player.width / 2) > y - (size / 2)) {
+                if (player.y - (player.width / 2) < this.y + (this.size / 2) && player.y + (player.width / 2) > this.y - (this.size / 2)) {
                     console.log("HIT");
                 };
                
@@ -104,14 +106,58 @@ app.controller("cubegame", function ($scope) {
    
     function BoxUpdate() {
         if (testtimer > 100) {
-            boxes.push(new Box(1280, c.height - player.height, 50))
-            testtimer = 0;
+        //    boxes.push(new Box(1280, c.height - player.height, 50))
+           // testtimer = 0;
         };
         for (var i = 0; i < boxes.length; i++) {
             boxes[i].update();
             boxes[i].collisionCheck();
         }
         testtimer +=1
+    };
+
+    var platforms = [];
+    //PLATFORM >>>>
+    function Platform(x, y, sizeX, sizeY) {
+        this.x = x;
+        this.y = y-=sizeY;
+        this.sizeX = sizeX;
+        this.sizeY = sizeY;
+
+        this.update = function () {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.fillStyle = "#3377ff";
+            ctx.fillRect(0, 0, this.sizeX, this.sizeY);
+            ctx.restore();
+            this.x -= gamevelocity;
+            
+        };
+        this.collisionCheck = function () {
+            if (player.x + (player.width / 2) > this.x + 10 && player.x + (player.width / 2) < this.x + (player.width / 2)) {
+               if (player.y + (player.width / 2) > this.y+2 && player.y + (player.width / 2) < this.y + this.sizeY) {
+                    console.log("HIT-platform");
+                };
+
+            };
+        };
+    }
+
+    function PlatformUpdate() {
+        if (testtimer > 200) {
+            platforms.push(new Platform(1280, c.height, 100 + (Math.random() * 300), 100 + (Math.random() * 300)))
+            testtimer = 0;
+        };
+
+        if (platforms.length > 10) {
+            platforms.splice(0, 2)
+        };
+
+        for (var i = 0; i < platforms.length; i++) {
+            platforms[i].update();
+            platforms[i].collisionCheck();
+        }
+       
     };
 
     //PLAYER
@@ -122,7 +168,22 @@ app.controller("cubegame", function ($scope) {
         if (player.y >= c.height - player.height) {
             player.y = c.height - player.height;
             player.jumping = false;
-        }
+            player.velY = 0;
+        };
+
+        // PLATFORM CHECK
+        
+        for (var i = 0; i < platforms.length; i++) {
+           // console.log(platforms[i].x);
+            if (player.x + (player.width / 2) > platforms[i].x && player.x - (player.width / 2) < platforms[i].x + platforms[i].sizeX && player.death == false) {
+                if (player.y + (player.height / 2) >= platforms[i].y && player.y + (player.height / 2) < platforms[i].y + 20) {
+                    player.y = platforms[i].y - (player.height/2);
+                    player.jumping = false;
+                    player.velY = 0;
+                };
+
+            };
+        };
 
         ctx.save();
         ctx.translate(player.x, player.y);
@@ -160,6 +221,7 @@ app.controller("cubegame", function ($scope) {
 
         bgUpdate();
 
+        PlatformUpdate();
         BoxUpdate();
         fgUpdate();
      
