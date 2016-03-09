@@ -3,10 +3,14 @@ var app = angular.module("MyApp", []);
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
 
-var gravity = 0.5;
+var gravity = 0.7;
+
 var angle = 0;
 
-var gamevelocity = 5;
+var gamevelocity = 7;
+var globaltimer = 0;
+
+
 
 var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10, jumping: true, jumpcycle:false, death:false};
 
@@ -19,17 +23,17 @@ var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10,
 
 app.controller("cubegame", function ($scope) {
 
-    document.body.onkeyup = function (e) {
+    document.body.onkeydown = function (e) {
         if (e.keyCode == 32) {
-            console.log("SPACEBAR");
+           // console.log("SPACEBAR");
             if (!player.jumping) {
                 player.jumping = true;
                 player.jumpcycle = true;
+                jumpframes = 0;
                 player.velY = -player.speed * 2;
-
-            }
-        }
-    }
+            };
+        };
+    };
 
 
     // PARTICLE
@@ -41,10 +45,11 @@ app.controller("cubegame", function ($scope) {
         this.vel = vel;
         this.size = size;
 
+
         this.update = function () {
             ctx.save();
             ctx.translate(this.x, this.y);
-           // ctx.fillStyle = "#b83bff";
+ 
             if (player.jumping == false) {
                 ctx.fillStyle = "#b83bff";
             } else {
@@ -73,6 +78,59 @@ app.controller("cubegame", function ($scope) {
         for (var i = 0; i < particles.length; i++) {
             particles[i].update();
         }
+    };
+
+    //FLOOR
+    var floortiles = [];
+    var refFloorTile = new floortile;
+    var floorInit = false;
+    
+    function floortile(x, y, size) {
+        this.x = x;
+        this.y = y;
+        this.size = 50;
+        var grd = ctx.createLinearGradient(0, 0, 50, 0);
+        grd.addColorStop(0, "black");
+        grd.addColorStop(1, "red");
+    
+       
+        this.update = function () {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+
+            ctx.fillStyle = grd;
+
+            ctx.fillRect(0, 0, this.size, this.size);
+            ctx.restore();
+
+            this.x -= gamevelocity;
+            
+        };
+    };
+
+    function TileUpdate() {
+
+        if (floorInit == false) {
+            var tilelocation = 0;
+            for (var i = 0; i < c.width / refFloorTile.size; i++) {
+                floortiles.push(new floortile(0 + tilelocation, c.height - refFloorTile.size));
+                tilelocation += refFloorTile.size;
+            };
+            floorInit = true;
+        };
+       
+        if (floorInit == true && floortiles[floortiles.length - 1].x < c.width - refFloorTile.size) {
+           floortiles.push(new floortile(floortiles[floortiles.length - 1].x + refFloorTile.size, c.height - refFloorTile.size));
+        }; 
+      
+        if (floortiles.length > (c.width / refFloorTile.size) + 5) {
+            floortiles.splice(0, 2)
+        };
+
+        for (var i = 0; i < floortiles.length; i++) {
+            floortiles[i].update();
+        }
+        
     };
 
     var boxes = [];
@@ -105,7 +163,7 @@ app.controller("cubegame", function ($scope) {
 
    
     function BoxUpdate() {
-        if (testtimer > 100) {
+        if ((globaltimer / 100) % 1 === 0) {
         //    boxes.push(new Box(1280, c.height - player.height, 50))
            // testtimer = 0;
         };
@@ -113,7 +171,6 @@ app.controller("cubegame", function ($scope) {
             boxes[i].update();
             boxes[i].collisionCheck();
         }
-        testtimer +=1
     };
 
     var platforms = [];
@@ -144,9 +201,8 @@ app.controller("cubegame", function ($scope) {
     }
 
     function PlatformUpdate() {
-        if (testtimer > 200) {
-            platforms.push(new Platform(1280, c.height, 100 + (Math.random() * 300), 100 + (Math.random() * 300)))
-            testtimer = 0;
+        if ((globaltimer / 200) % 1 === 0) {
+            platforms.push(new Platform(1280, c.height, 100 + Math.floor((Math.random() * 10)) * 50, 100 + Math.floor(Math.random() * 5 )* 50));
         };
 
         if (platforms.length > 10) {
@@ -160,13 +216,14 @@ app.controller("cubegame", function ($scope) {
        
     };
 
+    var value1 = 0;
     //PLAYER
     function PlayerUpdate() { 
         player.velY += gravity;
         player.y += player.velY;
 
-        if (player.y >= c.height - player.height) {
-            player.y = c.height - player.height;
+        if (player.y >= c.height - (player.height*1.5)) {
+            player.y = c.height - (player.height*1.5);
             player.jumping = false;
             player.velY = 0;
         };
@@ -180,6 +237,7 @@ app.controller("cubegame", function ($scope) {
                     player.y = platforms[i].y - (player.height/2);
                     player.jumping = false;
                     player.velY = 0;
+                    angle = 0;
                 };
 
             };
@@ -187,20 +245,27 @@ app.controller("cubegame", function ($scope) {
 
         ctx.save();
         ctx.translate(player.x, player.y);
-        ctx.rotate(angle * Math.PI / 180);
-        
-        if (player.jumping == true && player.jumpcycle == true) {
-            angle += 10;
-        }
 
-        if (angle >= 360) {
+        if (angle < 358 && player.jumpcycle == true) {
+            angle = (-Math.cos(value1) + 1) * 180;
+            value1 += 0.08;
+        };
+
+        if (angle > 358 ) {
             angle = 0;
+            value1 = 0;
             player.jumpcycle = false;
         };
 
+        ctx.rotate(angle * (Math.PI / 180));
+       
         ctx.fillStyle = "#FF0000";
         ctx.stroke();
         ctx.fillRect(-(player.width / 2), -(player.height / 2), player.width, player.height);
+
+        ctx.fillStyle = "#0bd5a3";
+        ctx.fillRect(-player.width / 2, -(player.height / 2), 10, 10);
+        ctx.fillRect((player.width / 2)-10, (player.height / 2)-10, 10, 10);
 
         ctx.restore();
     };
@@ -221,20 +286,26 @@ app.controller("cubegame", function ($scope) {
 
         bgUpdate();
 
+    
         PlatformUpdate();
         BoxUpdate();
         fgUpdate();
      
+        TileUpdate();
+
+        globaltimer++;
         requestAnimationFrame(Update);
     };
 
+
 window.addEventListener("load", function () {
- Update();
+    Update();
+
 });
  
 
 // TEST UPDATE FUNCTION ---------
-    function update2() {
+    function Update2() {
         ctx.clearRect(0, 0, 1280, 720);
 
         angle += 0.01;
@@ -250,8 +321,22 @@ window.addEventListener("load", function () {
         ctx.restore();
         ctx.translate(0.5, 0)
             
-        requestAnimationFrame(update2);
+        requestAnimationFrame(Update2);
     }
+
+    
+    var angle2 = 0;
+    function Update3() {
+        if (angle2 < 358) {
+            angle2 = (-Math.cos(value1) + 1) * 180;
+            console.log(angle2);
+            value1 += 0.08;
+        } else {
+            
+        };
+        requestAnimationFrame(Update3);
+    };
+
 });
 
 
