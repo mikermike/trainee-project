@@ -3,7 +3,7 @@ var app = angular.module("MyApp", []);
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
 
-var gravity = 1.4;
+var gravity = 1.7;
 
 var angle = 0;
 var rotationSpeed = 0;
@@ -27,11 +27,15 @@ app.controller("cubegame", function ($scope) {
     document.body.onkeydown = function (e) {
         if (e.keyCode == 32) {
             jump();
+            
         };
+
     };
+  
     document.body.onkeyup = function (e) {
         if (e.keyCode == 32) {
             jump();
+            
         };
     };
 
@@ -41,9 +45,50 @@ app.controller("cubegame", function ($scope) {
                 player.jumping = true;
                 player.jumpcycle = true;
                 jumpframes = 0;
-                player.velY = -player.speed * 2.7;
+                player.velY = -player.speed * 2.9;
             };
         
+    };
+    // Background
+    var bgparticles = [];
+
+    function bgParticle(x, y, vel, size) {
+        this.x = x;
+        this.y = y;
+        this.vel = vel;
+        this.size = size;
+
+        this.update = function () {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+     
+            ctx.fillRect(0,0, this.size, this.size);
+            ctx.restore();
+
+            this.x -= gamevelocity;
+        };
+    };
+   
+    var grd3 = ctx.createLinearGradient(0, 0, 0, c.height);
+    grd3.addColorStop(0, "#669cff");
+    grd3.addColorStop(1, "#00091a");
+
+    function backgroundUpdate() {
+        ctx.fillStyle = grd3;
+        ctx.fillRect(0, 0, c.width, c.height);
+
+       // bgparticles.push(new bgParticle(50, 50, 200));
+       
+        if (globaltimer / gamevelocity % 1 === 0) {
+            bgparticles.push(new bgParticle(1280, 50, 1, 200));
+            // console.log(bgparticles);
+        };
+
+        for (var i = 0; i < bgparticles.length; i++) {
+            
+            bgparticles[i].update();
+        };
+       
     };
 
 
@@ -204,7 +249,7 @@ app.controller("cubegame", function ($scope) {
         this.heightcheck = function () { //CHECK Platforms
          
             for (var i = 0; i < platforms.length; i++) {
-                if (this.x >= platforms[i].x && this.x < platforms[i].x + platforms[i].sizeX) {
+                if (this.x >= platforms[i].x && this.x < platforms[i].x + platforms[i].sizeX && platforms[i].side == "bottom") {
                     this.y = c.height - platforms[i].sizeY - this.size/2;
                   
                 };
@@ -214,7 +259,8 @@ app.controller("cubegame", function ($scope) {
 
     var boxseed = 0;
     function BoxUpdate() {
-        if ((globaltimer / (100 + (outputSeed[boxseed]*10))) % 1 === 0) { // USES SEED TO CREATE OBJECTS
+        if ((globaltimer / (100 + (outputSeed[boxseed] * 20))) % 1 === 0) { // USES SEED TO CREATE OBJECTS
+            console.log(outputSeed[boxseed] * 10);
             boxes.push(new Box(1280, c.height - player.height * 1.5, 50))
             if (boxseed < outputSeed.length - 1) {
                 boxseed += 1;
@@ -236,14 +282,28 @@ app.controller("cubegame", function ($scope) {
         }
      
     };
+    var score = 0;
+    // SCORES & TEXTS
+    function ScoreUpdate() {
+        if (globaltimer / 50 % 1 === 0) {
+            score = globaltimer;
+        }
+        ctx.save();
+        ctx.font = "30px Verdana";
+        ctx.fillStyle = "white";
+        ctx.fillText("Level Seed:" + seed + " - Score:" + score, 10, 40);
+        ctx.restore();
+    };
+
 
     var platforms = [];
     //PLATFORM >>>>
-    function Platform(x, y, sizeX, sizeY) {
+    function Platform(x, y, sizeX, sizeY,side) {
         this.x = x;
         this.y = y -= sizeY;
         this.sizeX = sizeX;
         this.sizeY = sizeY;
+        this.side = side;
 
         this.update = function () {
             var grd2 = ctx.createLinearGradient(0, 0, 0, this.sizeY);
@@ -292,27 +352,36 @@ app.controller("cubegame", function ($scope) {
 
                 ctx.restore();
             };
-            for (var i = 0; i < (this.sizeX / refFloorTile.size) - 2; i++) {
-                ctx.save();
+         
+                for (var i = 0; i < (this.sizeX / refFloorTile.size) - 2; i++) {
+                    ctx.save();
 
 
-                ctx.fillStyle = grd;
-                ctx.translate(this.x + refFloorTile.size + [i] * 50, this.y);
-                ctx.fillRect(0, 0, refFloorTile.size, refFloorTile.size);
+                    ctx.fillStyle = grd;
 
-                ctx.beginPath();
-                ctx.rect(0, 0, refFloorTile.size, refFloorTile.size);
-                ctx.stroke();
+                    if (side == "bottom") {
+                        ctx.translate(this.x + refFloorTile.size + [i] * 50, this.y);
+                    };
+                    if (side == "top") {
+                        ctx.translate(this.x + refFloorTile.size + [i] * 50, this.sizeY - refFloorTile.size);
+                    };
+                    
+                    ctx.fillRect(0, 0, refFloorTile.size, refFloorTile.size);
 
-                ctx.restore();
-            };
+                    ctx.beginPath();
+                    ctx.rect(0, 0, refFloorTile.size, refFloorTile.size);
+                    ctx.stroke();
+
+                    ctx.restore();
+                };
+          
 
             this.x -= gamevelocity;
 
         };
         this.collisionCheck = function () {
             if (player.x + (player.width / 2) > this.x + 10 && player.x + (player.width / 2) < this.x + (player.width / 2)) {
-                if (player.y + (player.width / 2) > this.y + 2 && player.y + (player.width / 2) < this.y + this.sizeY) {
+                if (player.y + (player.width / 2) > this.y + 2 && player.y + (player.width / 2) < this.y + this.sizeY && this.side ) { 
                     console.log("HIT-platform");
                 };
 
@@ -325,14 +394,15 @@ app.controller("cubegame", function ($scope) {
         if ((globaltimer / 100) % 1 === 0) {
 
             var platformheight = 100 + (Math.floor(outputSeed[0 + nextoutput] / 2) * 50);
-            platforms.push(new Platform(1280+250, c.height, 100 + (outputSeed[0 + nextoutput] * 50), platformheight));
-
-           
-            if (platformheight >= 250) { //CHECK IF HEIGHT IS HIGHER THAN 3 BLOCKS
-               platforms.push(new Platform(1280, c.height,200,150));
+            platforms.push(new Platform(1280 + 250, c.height, 100 + (outputSeed[0 + nextoutput] * 50), platformheight, "bottom"));
+                       
+            if (platformheight >= 250) { //CHECK IF HEIGHT IS HIGHER THAN 3 BLOCKS for BOTTOM
+               platforms.push(new Platform(1280, c.height,200,150,"bottom"));
             };
 
-            if (nextoutput < outputSeed.length - 1) {
+            platforms.push(new Platform(1280, platformheight, 100 + (outputSeed[0 + nextoutput] * 50), platformheight, "top"));
+
+            if (nextoutput < outputSeed.length - 2) {
                 nextoutput += 1;
                 
             } else {
@@ -369,12 +439,16 @@ app.controller("cubegame", function ($scope) {
         for (var i = 0; i < platforms.length; i++) {
            
             if (player.x + (player.width / 2) > platforms[i].x && player.x - (player.width / 2) < platforms[i].x + platforms[i].sizeX && player.death == false) {
-                if (player.y + (player.height / 2) >= platforms[i].y && player.y + (player.height / 2) < platforms[i].y + 20) {
-                    player.y = platforms[i].y - (player.height/2);
+               if (player.y + (player.height / 2) >= platforms[i].y && player.y + (player.height / 2) < platforms[i].y + 50 && platforms[i].side == "bottom") {
+                    player.y = platforms[i].y - (player.height / 2);
                     player.jumping = false;
                     player.velY = 0;
                     angle = 0;
-              };
+               };
+                
+               if (player.y + (player.height / 2) >= platforms[i].sizeY - 50 && player.y  < platforms[i].sizeY  && platforms[i].side == "top") {
+                    player.velY = 3;
+               };
             };
         };
 
@@ -419,17 +493,20 @@ app.controller("cubegame", function ($scope) {
     function Update() {
         ctx.clearRect(0, 0, c.width, c.height);
 
-        bgUpdate();
-            
+        backgroundUpdate();
+         
         PlatformUpdate();
 
         TileUpdate();
 
         BoxUpdate();
 
-        fgUpdate();     
+        fgUpdate();
+
+        ScoreUpdate();
 
         globaltimer++;
+
         requestAnimationFrame(Update);
     };
 
