@@ -12,7 +12,7 @@ var gamevelocity = 7;
 var globaltimer = 0;
 
 
-var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10, jumping: true, jumpcycle:false, death:false};
+var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10, jumping: true, jumpcycle:false, dead:false};
 
 
 (function () {
@@ -23,13 +23,7 @@ var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10,
 
 app.controller("cubegame", function ($scope) {
 
-    document.body.onkeydown = function (e) {
-        if (e.keyCode == 32) {
-            jump();
-            
-        };
 
-    };
   
     document.body.onkeyup = function (e) {
         if (e.keyCode == 32) {
@@ -38,9 +32,17 @@ app.controller("cubegame", function ($scope) {
         };
     };
 
+    document.body.onkeydown = function (e) {
+        if (e.keyCode == 32) {
+            jump();
+
+        };
+
+    };
+
     function jump() {
         // console.log("SPACEBAR");
-        if (!player.jumping && player.velY < 1) {
+        if (!player.jumping && player.velY < 1 && player.dead == false) {
             player.jumping = true;
             player.jumpcycle = true;
             jumpframes = 0;
@@ -66,7 +68,9 @@ app.controller("cubegame", function ($scope) {
             ctx.fillRect(0, 0, this.size, this.size);
             ctx.restore();
 
-            this.x -= gamevelocity * 0.95 + (vel / 5);
+            if (player.dead == false) {
+                this.x -= gamevelocity * 0.95 + (vel / 5);
+            };
         };
 
         this.ptUpdate = function () {
@@ -78,8 +82,10 @@ app.controller("cubegame", function ($scope) {
             ctx.fillRect(0, 0, this.size, this.size);
             ctx.restore();
 
-            this.x -= gamevelocity * 1.5;
-            this.y += Math.sin(globaltimer / this.randomVal);
+         //   if (player.dead == false) {
+                this.x -= gamevelocity * 1.5;
+                this.y += Math.sin(globaltimer / this.randomVal);
+           // };
         };
     };
    
@@ -108,7 +114,7 @@ app.controller("cubegame", function ($scope) {
         };
 
         //-------- particles
-        if (globaltimer / (gamevelocity / 2) % 1 === 0) {
+        if (globaltimer / (gamevelocity / 2) % 1 === 0 && player.dead == false) {
             bgparticles.push(new bgParticle(1280, Math.random() * c.height - 100, 1, 10));
         };
 
@@ -126,6 +132,7 @@ app.controller("cubegame", function ($scope) {
 
     // PARTICLE
     var particles = [];
+    var deadParticle = new Particle(0, 0, 1, 20);
 
     function Particle(x, y, vel, size) {
         this.x = x;
@@ -151,6 +158,24 @@ app.controller("cubegame", function ($scope) {
             if (this.size > 0) {
                 this.size -= 1;
             };
+        };
+        // DeadAnimation
+        var explosionTranslate = 0;
+        this.deadAnimation = function () {
+
+            ctx.save();
+            ctx.translate(this.x, this.y);
+
+            var deadAngle = 0;
+            for (var i = 0; i < 360; i++) {
+                ctx.rotate(deadAngle * (Math.PI / 180));
+                ctx.fillRect(this.size / 2, (this.size / 2) - explosionTranslate + Math.random()*150, this.size, this.size);
+                deadAngle += 1;
+            };
+                     
+            ctx.restore();
+            explosionTranslate += 15;   
+            
         };
     };
 
@@ -209,8 +234,9 @@ app.controller("cubegame", function ($scope) {
 
             ctx.restore();
 
-            this.x -= gamevelocity;
-            
+            if (player.dead == false) {
+                this.x -= gamevelocity;
+            };
         };
     };
 
@@ -225,7 +251,7 @@ app.controller("cubegame", function ($scope) {
             floorInit = true;
         };
        
-        if (floorInit == true && floortiles[floortiles.length - 1].x < c.width - refFloorTile.size) {
+        if (floorInit == true && floortiles[floortiles.length - 1].x < c.width - refFloorTile.size && player.dead == false) {
             floortiles.push(new floortile(floortiles[floortiles.length - 1].x + refFloorTile.size, c.height - refFloorTile.size));
         }; 
       
@@ -267,13 +293,15 @@ app.controller("cubegame", function ($scope) {
             
             ctx.restore();
 
-            
-            this.x -= gamevelocity;
+            if (player.dead == false) {
+                this.x -= gamevelocity;
+            };
         };
         this.collisionCheck = function () {
             if (player.x + (player.width / 2) >= this.x + (this.size / 2) && player.x + (player.width / 2) <= this.x + (this.size)) {
                 if (player.y - (player.width / 2) < this.y + (this.size / 2) && player.y + (player.width / 2) > this.y - (this.size / 2)) {
-                    console.log("HIT");
+                    // console.log("HIT");
+                    Dead();
                 };
             };
         };
@@ -291,8 +319,8 @@ app.controller("cubegame", function ($scope) {
 
     var boxseed = 0;
     function BoxUpdate() {
-        if ((globaltimer / (100 + (outputSeed[boxseed] * 20))) % 1 === 0) { // USES SEED TO CREATE OBJECTS
-            console.log(outputSeed[boxseed] * 10);
+        if ((globaltimer / (100 + (outputSeed[boxseed] * 20))) % 1 === 0 && player.dead == false) { // USES SEED TO CREATE OBJECTS
+            
             boxes.push(new Box(1280, c.height - player.height * 1.5, 50))
             if (boxseed < outputSeed.length - 1) {
                 boxseed += 1;
@@ -407,14 +435,15 @@ app.controller("cubegame", function ($scope) {
                 ctx.restore();
             };
           
-
-            this.x -= gamevelocity;
-
+            if (player.dead == false) {
+                this.x -= gamevelocity;
+            };
         };
         this.collisionCheck = function () {
             if (player.x + (player.width / 2) > this.x + 10 && player.x + (player.width / 2) < this.x + (player.width / 2)) {
                 if (player.y + (player.width / 2) > this.y + 2 && player.y + (player.width / 2) < this.y + this.sizeY && this.side ) { 
-                    console.log("HIT-platform");
+                   // console.log("HIT-platform");
+                    Dead();
                 };
 
             };
@@ -423,7 +452,7 @@ app.controller("cubegame", function ($scope) {
 
     var nextoutput = 0;
     function PlatformUpdate() {
-        if ((globaltimer / 100) % 1 === 0) {
+        if ((globaltimer / 100) % 1 === 0 && player.dead == false) {
 
             var platformheight = 100 + (Math.floor(outputSeed[0 + nextoutput] / 2) * 50);
             platforms.push(new Platform(1280 + 250, c.height, 100 + (outputSeed[0 + nextoutput] * 50), platformheight, "bottom"));
@@ -454,7 +483,12 @@ app.controller("cubegame", function ($scope) {
        
     };
 
-    
+    function Dead() {
+        deadParticle.x = player.x;
+        deadParticle.y = player.y;
+        player.dead = true;
+    };
+
     //PLAYER
     function PlayerUpdate() { 
         player.velY += gravity;
@@ -470,7 +504,7 @@ app.controller("cubegame", function ($scope) {
         // PLATFORM CHECK
         for (var i = 0; i < platforms.length; i++) {
            
-            if (player.x + (player.width / 2) > platforms[i].x && player.x - (player.width / 2) < platforms[i].x + platforms[i].sizeX && player.death == false) {
+            if (player.x + (player.width / 2) > platforms[i].x && player.x - (player.width / 2) < platforms[i].x + platforms[i].sizeX && player.dead == false) {
                 if (player.y + (player.height / 2) >= platforms[i].y && player.y + (player.height / 2) < platforms[i].y + 50 && platforms[i].side == "bottom") {
                     player.y = platforms[i].y - (player.height / 2);
                     player.jumping = false;
@@ -533,11 +567,19 @@ app.controller("cubegame", function ($scope) {
 
         BoxUpdate();
 
-        fgUpdate();
+        if (player.dead == false) {
+            fgUpdate();
+        }
 
         ScoreUpdate();
 
-        globaltimer++;
+        if (player.dead == true) {
+            deadParticle.deadAnimation(); // DEAD ANIMATION TEST
+        }
+
+        if (player.dead == false) {
+            globaltimer++;
+        };
 
         requestAnimationFrame(Update);
     };
@@ -545,6 +587,7 @@ app.controller("cubegame", function ($scope) {
 
     window.addEventListener("load", function () {
         randomSeed();
+        
         Update();
     });
  
