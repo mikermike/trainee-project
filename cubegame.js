@@ -12,7 +12,7 @@ var gamevelocity = 7;
 var globaltimer = 0;
 
 
-var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10, jumping: true, jumpcycle:false, dead:false};
+var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10, jumping: true, jumpcycle: false, dead: false };
 
 
 (function () {
@@ -22,9 +22,15 @@ var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10,
 
 
 app.controller("cubegame", function ($scope) {
+    var cubegame = this;
 
+    $scope.highscores = [
+	  { name: 'TacoTaco', seed: 2, score: 2100 },
+	  { name: 'Dj-Kippie', seed: 2, score: 1300 },
+	  { name: 'Mikers', seed: 3, score: 2250 },
+      { name: 'Rick & Morty', seed: 6, score: 700 }
+    ];
 
-  
     document.body.onkeyup = function (e) {
         if (e.keyCode == 32) {
             jump();
@@ -78,14 +84,13 @@ app.controller("cubegame", function ($scope) {
             ctx.translate(this.x, this.y);
             ctx.globalAlpha = (Math.sin(globaltimer / 50) + 1) / 20 + 0.1;
             ctx.fillStyle = "#FFFFF";
-            // ctx.rotate(globaltimer/100);
+
             ctx.fillRect(0, 0, this.size, this.size);
             ctx.restore();
 
-         //   if (player.dead == false) {
-                this.x -= gamevelocity * 1.5;
-                this.y += Math.sin(globaltimer / this.randomVal);
-           // };
+            this.x -= gamevelocity * 1.5;
+            this.y += Math.sin(globaltimer / this.randomVal);
+
         };
     };
    
@@ -96,8 +101,6 @@ app.controller("cubegame", function ($scope) {
     function backgroundUpdate() {
         ctx.fillStyle = grd3;
         ctx.fillRect(0, 0, c.width, c.height);
-
-        // bgparticles.push(new bgParticle(50, 50, 200));
 
         //------- boxes
         if (globaltimer / (gamevelocity * 2) % 1 === 0) {
@@ -298,7 +301,7 @@ app.controller("cubegame", function ($scope) {
             };
         };
         this.collisionCheck = function () {
-            if (player.x + (player.width / 2) >= this.x + (this.size / 2) && player.x + (player.width / 2) <= this.x + (this.size)) {
+            if (player.x + (player.width / 2) >= this.x + (this.size / 2) && player.x + (player.width / 2) <= this.x + (this.size*1.5)) {
                 if (player.y - (player.width / 2) < this.y + (this.size / 2) && player.y + (player.width / 2) > this.y - (this.size / 2)) {
                     // console.log("HIT");
                     Dead();
@@ -342,16 +345,20 @@ app.controller("cubegame", function ($scope) {
         }
      
     };
+
     var score = 0;
     // SCORES & TEXTS
     function ScoreUpdate() {
         if (globaltimer / 50 % 1 === 0) {
             score = globaltimer;
+
         }
         ctx.save();
-        ctx.font = "30px Verdana";
+        ctx.font = "30px Agency FB";
         ctx.fillStyle = "white";
-        ctx.fillText("Level Seed:" + seed + " - Score:" + score, 10, 40);
+        ctx.fillText("LEVEL SEED:" + seed + " - SCORE:" + score, 10, 40);
+        ctx.font = "30px Agency FB";
+        ctx.fillText("MICHAEL HALIWELA - 2016", c.width/2.7, c.height-10);
         ctx.restore();
     };
 
@@ -487,6 +494,7 @@ app.controller("cubegame", function ($scope) {
         deadParticle.x = player.x;
         deadParticle.y = player.y;
         player.dead = true;
+        
     };
 
     //PLAYER
@@ -580,8 +588,12 @@ app.controller("cubegame", function ($scope) {
         if (player.dead == false) {
             globaltimer++;
         };
-
+        $scope.$apply(function () {
+            $scope.testvariable = globaltimer;
+        })
+        
         requestAnimationFrame(Update);
+        
     };
 
 
@@ -597,7 +609,6 @@ app.controller("cubegame", function ($scope) {
         ctx.clearRect(0, 0, 1280, 720);
 
         angle += 0.01;
-        // incrementAngle();
         ctx.save();
         ctx.lineWidth = 10;
         ctx.translate(200, 200);
@@ -612,29 +623,6 @@ app.controller("cubegame", function ($scope) {
         requestAnimationFrame(Update2);
     }
 
-    
-    var angle2 = 0;
-    function Update3() {
-        if (angle2 < 358) {
-            angle2 = (-Math.cos(rotationSpeed) + 1) * 180;
-            console.log(angle2);
-            rotationSpeed += 0.08;
-        } else {
-            
-        };
-        requestAnimationFrame(Update3);
-    };
-
-    function Update4() {
-        if (angle2 < 358) {
-            angle2 = (-Math.cos(rotationSpeed) + 1) * 180;
-            console.log(angle2);
-            rotationSpeed += 0.08;
-        } else {
-
-        };
-        requestAnimationFrame(Update4);
-    };
 
     var seed = 2;
     outputSeed = [];

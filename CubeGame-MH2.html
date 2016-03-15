@@ -5,10 +5,103 @@
     <meta charset="utf-8" />
     <title></title>
     <script src="./angular.min.js"></script>
+
+    <style>
+        body{
+            font-family:'Agency FB';
+            background-color:#9a93ec;
+            color:white;
+            text-transform: uppercase;
+        }
+
+        #container{
+            width:100%;
+            height:100%;
+
+        }
+
+        #myCanvas {
+            
+            float: left;
+            margin-left: 12%;
+            border-width: 1px;
+            border-style: solid;
+            border-color: Black;
+            width:71rem;
+            height:40rem;
+        }
+
+        h1{
+ 
+            color:white;
+            text-align:center;
+            font-weight: bold;
+            text-decoration:underline;
+            font-size:4rem;
+            margin:1rem;
+           
+        }
+
+        h2{
+            text-align:center;
+            margin:1rem;
+            font-size:3rem;
+
+        }
+        
+        #scores{
+            margin:0 auto;
+            text-align:center;
+            background-color:#0052a5;
+            font-size:1.4em;
+        }
+
+        td,th{
+            padding:1rem;
+            padding-left:1.5rem;
+            padding-right:1.5rem;
+            border:1px solid #ffffff;
+        }
+
+        th, h1, h2, #underline {
+            background-color:#400080;
+        }
+
+        .names{
+            background-color:#4d4dff;
+        }
+
+        #underline{
+            width:100%;
+            margin-top:17rem;
+            height:3rem;
+        }
+    </style>
  
 </head>
-<body ng-controller="cubegame">
-    <canvas id="myCanvas" width="1280" height="720" style="border:1px solid #000000;"></canvas>
-    <script src="./cubegame.js"></script>
+<body ng-controller=" cubegame">
+    <div id="container">
+        <h1>Cube-Game-3000</h1>
+
+        <canvas id="myCanvas" width="1280" height="720" style="border:1px solid #ffffff;"></canvas>
+        <script src="./cubegame.js"></script>
+
+        <!--Dit is een tekst {{testvariable}}-->
+
+        <h2>HIGHSCORES</h2>
+        <table id="scores">
+            <tr>
+                <th>Name</th>
+                <th>Seed</th>
+                <th>Score</th>
+            </tr>
+            <tr ng-repeat="highscore in highscores |  orderBy:'-score'">
+                <td class="names">{{highscore.name}}</td>
+                <td>{{highscore.seed}}</td>
+                <td>{{highscore.score}}</td>
+            </tr>
+        </table>
+        <div id="underline"></div>
+    </div>  
 </body>
 </html>
