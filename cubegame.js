@@ -22,14 +22,20 @@ var player = { x: c.width / 2, y: 50, width: 50, height: 50, velY: 0, speed: 10,
 
 
 app.controller("cubegame", function ($scope) {
-    var cubegame = this;
 
     $scope.highscores = [
 	  { name: 'TacoTaco', seed: 2, score: 2100 },
-	  { name: 'Dj-Kippie', seed: 2, score: 1300 },
+	  { name: 'Dj-Kippie', seed: 2, score: 600 },
 	  { name: 'Mikers', seed: 3, score: 2250 },
       { name: 'Rick & Morty', seed: 6, score: 700 }
     ];
+
+    $scope.playerName = "New Player";
+
+    //CONTROLS
+    window.onkeydown = function (e) {
+        return !(e.keyCode == 32);
+    };
 
     document.body.onkeyup = function (e) {
         if (e.keyCode == 32) {
@@ -44,6 +50,48 @@ app.controller("cubegame", function ($scope) {
 
         };
 
+    };
+    document.body.onkeydown = function (e) {
+        if (e.keyCode == 90) {
+            console.log("Z");
+
+            highscoreUpdate();
+            reset();
+        };
+
+    };
+
+    function highscoreUpdate() {
+        $scope.highscores.sort(function (a, b) { return a.score - b.score });
+       
+        if ($scope.highscores.length > 9 && score >= $scope.highscores[0].score) {
+            $scope.highscores.shift();
+        };
+
+        if ($scope.highscores.length < 9 || score >= $scope.highscores[0].score) {
+            $scope.highscores.push({ name: $scope.playerName, seed: seed, score: score })
+        };
+    };
+    
+    function reset() {
+        bgBoxes = []; //reset-background
+        bgparticles = [];
+       
+        boxes = [];  //boxes
+        platforms = [];
+
+        score = 0;
+        boxseed = 0;
+        nextoutput = 0;
+        globaltimer = 0;
+
+        player.y = 50;
+        player.dead = false;
+        player.jump = true;
+        particles = [];
+
+        deadParticle = new Particle(0, 0, 1, 20); //explosion reset
+        
     };
 
     function jump() {
@@ -358,7 +406,7 @@ app.controller("cubegame", function ($scope) {
         ctx.fillStyle = "white";
         ctx.fillText("LEVEL SEED:" + seed + " - SCORE:" + score, 10, 40);
         ctx.font = "30px Agency FB";
-        ctx.fillText("MICHAEL HALIWELA - 2016", c.width/2.7, c.height-10);
+        ctx.fillText("MICHAEL HALIWELA - 2016", c.width/2.45, c.height-10);
         ctx.restore();
     };
 
@@ -640,4 +688,7 @@ app.controller("cubegame", function ($scope) {
         console.log(outputSeed);
     }
 
+    // Angular VARS
+    $scope.Aseed = seed;
+    $scope.Atime = gamevelocity;
 });

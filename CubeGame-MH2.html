@@ -17,18 +17,21 @@
         #container{
             width:100%;
             height:100%;
+        }
 
+        #settings{
+            float:left;
+            margin-left:4vw;
         }
 
         #myCanvas {
-            
             float: left;
-            margin-left: 12%;
+            margin-left: 5vw;
             border-width: 1px;
             border-style: solid;
             border-color: Black;
-            width:71rem;
-            height:40rem;
+            width:50%;
+            height:50%;
         }
 
         h1{
@@ -37,29 +40,31 @@
             text-align:center;
             font-weight: bold;
             text-decoration:underline;
-            font-size:4rem;
-            margin:1rem;
+            font-size:4vw;
+            margin:0;
            
         }
 
         h2{
             text-align:center;
-            margin:1rem;
-            font-size:3rem;
+            margin:0;
+            margin-bottom:1vw;
+            font-size:2.5vw;
+            padding:0;
 
         }
         
-        #scores{
+        #scores, #options{
             margin:0 auto;
             text-align:center;
             background-color:#0052a5;
-            font-size:1.4em;
+            font-size:1.2vw;
         }
 
         td,th{
-            padding:1rem;
-            padding-left:1.5rem;
-            padding-right:1.5rem;
+            padding:0.3vw;
+            padding-left:1.5vw;
+            padding-right:1.5vw;
             border:1px solid #ffffff;
         }
 
@@ -73,35 +78,78 @@
 
         #underline{
             width:100%;
-            margin-top:17rem;
-            height:3rem;
+            margin-top:34vw;
+            height:3vw;
+            float:left;
+            position:absolute;
+            z-index:-1;
+        }
+        input{
+            width:6vw;
+            font-family:'Agency FB';
+            font-size:1.2vw;
+            background-color:none;
+            font-weight: bold;
+            text-align:center;
+            
         }
     </style>
  
 </head>
 <body ng-controller=" cubegame">
+
+    <div id="underline"></div>
+
     <div id="container">
         <h1>Cube-Game-3000</h1>
+        <br />
+        <div id="settings">
+            <h2>SETTINGS</h2>
+            <table id="options">
+                <tr>
+                    <th>Options</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td class="names">Level Seed</td>
+                    <td><input type="text" ng-model="Aseed" placeholder="Insert name"></td>
+                </tr>
+                <tr>
+                    <td class="names">Game Speed</td>
+                    <td>{{Atime}}</td>
+                </tr>
+                <tr>
+                    <td class="names">Difficulty</td>
+                    <td>Extreme</td>
+                </tr>
+                <tr>
+                    <td class="names">Your Name</td>
+                    <td><input type="text" ng-model="playerName" placeholder="Insert name"></td>
+                </tr>
+            </table>
+        </div>
 
         <canvas id="myCanvas" width="1280" height="720" style="border:1px solid #ffffff;"></canvas>
         <script src="./cubegame.js"></script>
-
+        
         <!--Dit is een tekst {{testvariable}}-->
-
-        <h2>HIGHSCORES</h2>
-        <table id="scores">
-            <tr>
-                <th>Name</th>
-                <th>Seed</th>
-                <th>Score</th>
-            </tr>
-            <tr ng-repeat="highscore in highscores |  orderBy:'-score'">
-                <td class="names">{{highscore.name}}</td>
-                <td>{{highscore.seed}}</td>
-                <td>{{highscore.score}}</td>
-            </tr>
-        </table>
-        <div id="underline"></div>
+        <div id="highscores">
+            <h2>HIGHSCORES</h2>
+            <table id="scores">
+                <tr>
+                    <th>Name</th>
+                    <th>Seed</th>
+                    <th>Score</th>
+                </tr>
+                <tr ng-repeat="highscore in highscores |  orderBy:'-score'">
+                    <td class="names">{{highscore.name}}</td>
+                    <td>{{highscore.seed}}</td>
+                    <td>{{highscore.score}}</td>
+                </tr>
+            </table>
+        </div>
+        
     </div>  
+   
 </body>
 </html>
